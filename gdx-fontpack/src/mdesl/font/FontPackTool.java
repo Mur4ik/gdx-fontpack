@@ -12,15 +12,12 @@ import mdesl.font.BitmapFontWriter.FontInfo;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData;
 import com.badlogic.gdx.graphics.g2d.PixmapPacker;
 import com.badlogic.gdx.graphics.g2d.PixmapPacker.Page;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.filters.FreeTypeFilter;
-import com.badlogic.gdx.graphics.g2d.freetype.filters.FreeTypePaddingFilter;
-import com.badlogic.gdx.graphics.g2d.freetype.filters.FreeTypeShadowFilter;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.IntMap;
@@ -72,7 +69,8 @@ public class FontPackTool {
 			this(key, path, null, null);
 		}
 		
-		public String toString() {
+		@Override
+        public String toString() {
 			return (name!=null ? name : key) + " (" + path + ")";
 		}
 	}
@@ -165,19 +163,13 @@ public class FontPackTool {
 		packer.atlas.dispose();
 	}
 	
-	static void setupFilters(FreeTypeFontGenerator gen, Settings s) {
-		gen.getFilters().clear();
-		
-		gen.addFilter(new ProgressFilter());
-		
-		if (s.paddingLeft!=0 || s.paddingTop!=0 || s.paddingRight!=0 || s.paddingBottom!=0) {
-			gen.addFilter(new FreeTypePaddingFilter(s.paddingLeft, s.paddingTop, s.paddingRight, s.paddingBottom));
-		}
-		
+	static void setupFilters(FreeTypeFontGenerator gen, Settings s, FreeTypeFontParameter parameters) {
 		if (s.glow) {
 			Color col = new Color(s.glowColor);
-			gen.addFilter( new FreeTypeShadowFilter(col, s.glowOffsetX, s.glowOffsetY,
-										s.glowBlurRadius, s.glowBlurIterations, 0) );
+			parameters.shadowColor = col;
+			parameters.shadowOffsetX = s.glowOffsetX;
+			parameters.shadowOffsetY = s.glowOffsetY;
+			//parameters.borderWidth  = 2;
 		} 	
 	}
 	
@@ -234,7 +226,11 @@ public class FontPackTool {
 			} catch (Exception e) {
 				throw new InvalidFontFileException(font);
 			}
-			setupFilters(gen, s);
+			FreeTypeFontParameter parameter = new FreeTypeFontParameter();
+			parameter.flip = s.flip;
+			parameter.characters = s.characters;
+			parameter.packer = packer;
+			setupFilters(gen, s, parameter);
 			
 			for (int i=0; i<sizes.length; i++) {
 				//reset the glyph progress to zero
@@ -251,7 +247,8 @@ public class FontPackTool {
 				//generate the data, packing it into our atlas
 				BitmapFontData data = null;
 				try {
-					data = gen.generateData(sizes[i], s.characters, s.flip, packer);
+				    parameter.size = sizes[i];
+					data = gen.generateData(parameter);
 				} catch (GdxRuntimeException e) {
 					throw new InvalidFontFileException(font, e.getMessage());
 				}
@@ -340,32 +337,11 @@ public class FontPackTool {
 		}
 	}
 	
-	public static interface ProgressListener {
-		
-		public void onGlyphLoad(int loaded, int total);
-		public void onFontLoad(int loaded, int total);
+	public interface ProgressListener {
+		void onGlyphLoad(int loaded, int total);
+		void onFontLoad(int loaded, int total);
 	}
-	
-	static class ProgressFilter implements FreeTypeFilter {
 		
-		@Override
-		public Pixmap apply (Pixmap pixmap) {
-			tickProgress();
-			return pixmap;
-		}
-
-		@Override
-		public int left () {
-			return 0;
-		}
-
-		@Override
-		public int top () {
-			return 0;
-		}
-		
-	}
-	
 	public static class InvalidFontFileException extends IOException {
 		
 		private static final long serialVersionUID = 1L;

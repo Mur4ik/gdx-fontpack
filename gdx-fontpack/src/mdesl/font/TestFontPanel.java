@@ -4,9 +4,10 @@ import mdesl.font.FontPackGUI.BGStyle;
 import mdesl.font.FontPackTool.FontData;
 import mdesl.font.FontPackTool.FontPack;
 
+import org.lwjgl.opengl.GL11;
+
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -32,6 +33,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class TestFontPanel implements ApplicationListener {
 	
@@ -117,7 +119,8 @@ public class TestFontPanel implements ApplicationListener {
 		
 		linearFiltering = new ToggleBox("Linear Filtering", skin);
 		linearFiltering.addListener(new ClickListener() {
-			public void clicked(InputEvent ev, float x, float y) {
+			@Override
+            public void clicked(InputEvent ev, float x, float y) {
 				updateFiltering();
 			}
 		});
@@ -161,7 +164,8 @@ public class TestFontPanel implements ApplicationListener {
 			active = skin.getDrawable("check-off");
 			setTouchable(Touchable.enabled);
 			addListener(new ClickListener() {
-				public void clicked(InputEvent ev, float x, float y) {
+				@Override
+                public void clicked(InputEvent ev, float x, float y) {
 					setSelected(!isSelected());
 				}
 			});
@@ -226,7 +230,8 @@ public class TestFontPanel implements ApplicationListener {
 			stage.setKeyboardFocus(null);
 		
 		Gdx.app.postRunnable(new Runnable() {
-			public void run() {
+			@Override
+            public void run() {
 				//dispose old fonts...
 				if (regions!=null) {
 					for (TextureRegion r : regions) {
@@ -285,7 +290,7 @@ public class TestFontPanel implements ApplicationListener {
 					background.rgb.getBlue() / 255f,
 					background.rgb.getAlpha() / 255f);
 		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClear(GL11.GL_COLOR_BUFFER_BIT);
 		
 		boolean hasUserInput = false;
 		if (input.getText()!=null && input.getText().length()!=0)
@@ -341,6 +346,6 @@ public class TestFontPanel implements ApplicationListener {
 	public void resize (int w, int h) {
 		cam.setToOrtho(false,  w,  h);
 		batch.setProjectionMatrix(cam.combined);
-		stage.setViewport(w, h, false);
+		stage.setViewport(new ExtendViewport(w, h));
 	}
 }

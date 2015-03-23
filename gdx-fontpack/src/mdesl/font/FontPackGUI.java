@@ -20,7 +20,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
@@ -63,14 +62,16 @@ import javax.swing.text.DocumentFilter;
 
 import mdesl.font.BitmapFontWriter.OutputFormat;
 import mdesl.font.FileUtil.BrowseType;
-import mdesl.font.FileUtil.PrefType;
 import mdesl.font.FileUtil.FileType;
+import mdesl.font.FileUtil.PrefType;
 import mdesl.font.FontPackTool.FontItem;
 import mdesl.font.FontPackTool.FontPack;
 import mdesl.font.FontPackTool.FontPackDocument;
 import mdesl.font.FontPackTool.InvalidFontFileException;
 
+import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -563,7 +564,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 		
 
 		new FileDrop(fontList, new FileDrop.Listener() {
-			public void filesDropped (java.io.File[] files) {
+			@Override
+            public void filesDropped (java.io.File[] files) {
 				for (int i = 0; i < files.length; i++) {
 					FontItem item = new FontItem();
 					String fName = files[i].getName();
@@ -813,7 +815,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 			});
 		}
 		
-		protected void paintComponent(Graphics g) {
+		@Override
+        protected void paintComponent(Graphics g) {
 			if (!parent.isActive())
 				entered = pressed = false;
 			
@@ -1114,13 +1117,15 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 	
 	class SizeFieldFilter extends DocumentFilter {
 		
-		public void insertString(FilterBypass fb, int offs, String str,
+		@Override
+        public void insertString(FilterBypass fb, int offs, String str,
 				AttributeSet a) throws BadLocationException {
 			if (check(str))
 				super.insertString(fb, offs, str, a);
 		}
 		
-		public void replace(FilterBypass fb, int offs, int length, String str,
+		@Override
+        public void replace(FilterBypass fb, int offs, int length, String str,
 				AttributeSet a) throws BadLocationException {
 			if (check(str))
 				super.replace(fb, offs, length, str, a);
@@ -1135,7 +1140,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 			return true;
 		}
 		
-		public void remove(FilterBypass fb, int offs, int length) throws BadLocationException {
+		@Override
+        public void remove(FilterBypass fb, int offs, int length) throws BadLocationException {
 			super.remove(fb, offs, length);
 		}
 	}
@@ -1160,7 +1166,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 	class AtlasPanel extends JComponent {
 		final int CHECKSIZE = 16;
 		
-		public void paintComponent(Graphics g) {
+		@Override
+        public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			g.setColor(Color.BLACK);
 			g.clearRect(0, 0, getWidth(), getHeight());
@@ -1386,7 +1393,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 			super(parent, true);
 		}
 		
-		protected int setup(SwingTable form, ActionListener successAction) {
+		@Override
+        protected int setup(SwingTable form, ActionListener successAction) {
 			pathField = new JTextField();
 			pathButton = new IconButton(this, "/data/folder-2.png");
 			pathField.addActionListener(successAction);
@@ -1462,7 +1470,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 	}
 	
 	class FontCellRenderer extends DefaultListCellRenderer {
-		public Component getListCellRendererComponent (JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+		@Override
+        public Component getListCellRendererComponent (JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 			super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			
 			FontItem item = (FontItem)value;
@@ -1496,7 +1505,8 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 			setLocationRelativeTo(parent);
 		}
 		
-		protected int setup(SwingTable form, ActionListener successAction) {
+		@Override
+        protected int setup(SwingTable form, ActionListener successAction) {
 			form.top().left();
 			
 			charField = new JTextArea(FontPackTool.ABRIDGED_CHARS);
@@ -1577,20 +1587,19 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 
 	}
 	
-	class TestPanel extends SwingTable {
+	class TestPanel extends SwingTable implements ApplicationListener {
 
 		TestFontPanel panel;
 		LwjglCanvas canvas;
 		
 		public TestPanel() {
 			panel = new TestFontPanel(background, FontPackGUI.this);
-//			LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-//			config.width = 350;
-//			config.height = 350;
-//			config.useGL20 = true;
-//			config.initialBackgroundColor = com.badlogic.gdx.graphics.Color.BLACK;
+			LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+			config.width = 350;
+			config.height = 350;
+			config.initialBackgroundColor = com.badlogic.gdx.graphics.Color.BLACK;
 			
-			canvas = new LwjglCanvas(panel, true);
+			canvas = new LwjglCanvas(this);
 			addCell(canvas.getCanvas()).minSize(100, 100).expand().fill();
 		}
 		
@@ -1619,5 +1628,35 @@ public class FontPackGUI extends JFrame implements FontPackTool.ProgressListener
 			else 
 				return false;
 		}
+
+        @Override
+        public void create() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void render() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void pause() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void resume() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void dispose() {
+            // TODO Auto-generated method stub
+            
+        }
 	}
 }
